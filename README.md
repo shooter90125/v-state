@@ -1,4 +1,4 @@
-# v-state
+# VState
 Framework agnostic state management library—simple and flexible.
 
 ## Motivation
