@@ -94,7 +94,7 @@ const personState = new VState({ name: 'Scott', age: 30 }, reducer)
 
 personState.get() // { name: 'Scott', age: 30 }
 
-personState.dispatch({ type: 'SET_NAME', value: 'TEJAS' })
+personState.dispatch({ type: 'SET_NAME', value: 'Tejas' })
 
 personState.get() // { name: 'Tejas', age: 30 }
 ```
