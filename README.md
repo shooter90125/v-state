@@ -73,7 +73,7 @@ const ComponentReceivingProp = ({ name, ...props }) => {
 const ComponentUsingHoc = nameState.inject('name', OtherComponent)
 ```
 
-## Reducer/Dispatch pattern
+## Reducer/dispatch pattern
 
 ```javascript
 import VState from 'src'
