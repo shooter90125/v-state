@@ -1,4 +1,9 @@
+import React from 'react'
 import VState from './v-state'
+import sleep from 'sleep-promise'
+import { render, screen, fireEvent } from '@testing-library/react'
+import '@testing-library/jest-dom/extend-expect'
+import { renderHook, act } from '@testing-library/react-hooks'
 
 // Unit test of VState
 test('Create instance of VState', () => {
@@ -159,6 +164,130 @@ describe('Interact with VState', () => {
       testState.dispatch('multiplyThenSubtract', 2, 7)
       const value = testState.get()
       expect(value).toBe(33)
+    }
+  )
+
+  test(
+    "Can't mutate initial state",
+    () => {
+      const testState = new VState({ test: 'value' })
+      const value = testState.get()
+      expect(() => { value.test = 'differentValue' }).toThrow()
+    }
+  )
+
+  test(
+    "Can't mutate after setting state",
+    () => {
+      const testState = new VState({ test: 'value' })
+      testState.set({ test: 'value2' })
+      const value = testState.get()
+      expect(() => { value.test = 'differentValue' }).toThrow()
+    }
+  )
+
+  test(
+    "Can't mutate after resetting state",
+    () => {
+      const testState = new VState({ test: 'value' })
+      testState.set({ test: 'value2' })
+      testState.reset()
+      const value = testState.get()
+      expect(() => { value.test = 'differentValue' }).toThrow()
+    }
+  )
+
+  test(
+    'Subscription',
+    () => {
+      const testState = new VState(110)
+      let initialVal
+      testState.subscribe(val => { initialVal = val })
+      expect(initialVal).toBe(110)
+      testState.set(20)
+      expect(initialVal).toBe(20)
+    }
+  )
+
+  test(
+    'Unsubscribe',
+    () => {
+      const testState = new VState(3)
+      let initialVal
+      const unsubscribe = testState.subscribe(val => { initialVal = val })
+      expect(initialVal).toBe(3)
+      unsubscribe()
+      testState.set(100)
+      expect(initialVal).toBe(3)
+    }
+  )
+
+  test(
+    'Unsubscribe by ID',
+    () => {
+      const testState = new VState(3)
+      let initialVal
+      testState.subscribe(val => { initialVal = val }, 'testid')
+      expect(initialVal).toBe(3)
+      testState.unsubscribe('testid2')
+      testState.set(100)
+      expect(initialVal).toBe(100)
+      testState.unsubscribe('testid')
+      testState.set('test me')
+      expect(initialVal).toBe(100)
+    }
+  )
+
+  test(
+    'use hook',
+    () => {
+      const counter = new VState(0)
+      const person = new VState({ name: 'Tom', age: 30 })
+
+      let renderCount = 0
+      const Component = () => {
+        renderCount += 1
+        const count = counter.use()
+        const age = person.use(person => person.age)
+        return (
+          <div>
+            <div>Count: {count}</div>
+            <div>Age: {age}</div>
+          </div>
+        )
+      }
+      render(<Component />)
+
+      // Increment count and expect component to reflect new value
+      expect(screen.getByText(/count/i)).toHaveTextContent('Count: 0')
+      counter.increment()
+      expect(screen.getByText(/count/i)).toHaveTextContent('Count: 1')
+
+      // Change age and expect content to change and 1 extra render
+      const renderCountBeforeSet = renderCount
+      person.set(person => ({ ...person, age: 90 }))
+      expect(renderCount - renderCountBeforeSet).toBe(1)
+      expect(screen.getByText(/age/i)).toHaveTextContent('Age: 90')
+
+      // Change name and expect no extra renders
+      const renderCountBeforeDummy = renderCount
+      person.set(person => ({ ...person, name: 'John' }))
+      expect(renderCount - renderCountBeforeDummy).toBe(0)
+    }
+  )
+
+  test(
+    'Inject HOC',
+    () => {
+      const counter = new VState(0)
+      const Component = ({ count }) => <div>Count: {count}</div>
+      const ConnectedComponent = counter.inject('count', Component)
+      render(<ConnectedComponent />)
+      const countText = screen.getByText(/count/i)
+      expect(countText).toHaveTextContent('Count: 0')
+      counter.increment()
+      const counterText2 = screen.getByText(/count/i)
+      expect(counterText2).toHaveTextContent('Count: 1')
     }
   )
 })

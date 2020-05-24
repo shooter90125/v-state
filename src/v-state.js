@@ -12,7 +12,7 @@ const useUpdatingRef = value => {
 class VState {
   constructor (initialValue = undefined, reducer = state => state) {
     this._initialValue = initialValue
-    this._value = initialValue
+    this._value = Object.freeze(initialValue)
     this._reducer = reducer
     this._subscriptions = []
     this._broadcast = this._broadcast.bind(this)
@@ -45,6 +45,7 @@ class VState {
     const newValue = typeof _newValue === 'function' ? _newValue(currentValue) : _newValue
     if (newValue !== currentValue) {
       this._value = newValue
+      Object.freeze(this._value)
       this._broadcast()
     }
   }
