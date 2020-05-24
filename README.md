@@ -114,7 +114,7 @@ ageState.subscribe(age => console.log(age))
 
 // log output: 30
 
-ageState.set(21)
+personState.set({ name: 'Scott', age: 21 })
 
 // log output: 21
 
