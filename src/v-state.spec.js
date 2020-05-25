@@ -1,3 +1,5 @@
+/* global describe, test, expect, it, beforeEach, afterEach */
+
 import React from 'react'
 import VState from './v-state'
 import shallowEqual from './shallow-equal'
@@ -6,19 +8,65 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import '@testing-library/jest-dom/extend-expect'
 import { renderHook, act } from '@testing-library/react-hooks'
 
-// Unit test of VState
 test('Create instance of VState', () => {
   const testState = new VState()
   expect(testState).toBeInstanceOf(VState)
 })
 
+// getDerivedState
+// ---------------
+
 describe('VState getDerivedState', () => {
-  const parentState = new VState({ name: 'Aaron', age: 32, books: ['Harry Potter', 'The Hobbit'] })
+  const parentState = new VState(
+    { name: 'Aaron', age: 32, books: ['Harry Potter', 'The Hobbit'] },
+    (state, property, value) => ({ ...state, [property]: value })
+  )
+
+  beforeEach(parentState.reset)
+
   it('Creates derived state', () => {
     const booksState = parentState.getDerivedState(person => person.books)
     expect(booksState).toBeInstanceOf(VState)
   })
+
+  it('Does not allow setting on derived state', () => {
+    const booksState = parentState.getDerivedState(person => person.age)
+    expect(() => booksState.reset()).toThrow()
+    expect(() => booksState.toggle()).toThrow()
+    expect(() => booksState.set(5)).toThrow()
+    expect(() => booksState.increment()).toThrow()
+    expect(() => booksState.dispatch('name', 'Harry')).toThrow()
+  })
+
+  it('Updates when parent changes value', () => {
+    const ageState = parentState.getDerivedState(person => person.age)
+    parentState.dispatch('age', 50)
+    expect(ageState.get()).toBe(50)
+    parentState.set({})
+    expect(ageState.get()).toBe(undefined)
+  })
+
+  it('Does not broadcast when selected value is equal', () => {
+    const booksState = parentState.getDerivedState(person => person.books)
+    let callbacks = 0
+    booksState.subscribe(() => { callbacks++ })
+    expect(callbacks).toBe(1)
+    parentState.set(state => ({ ...state, age: 101 }))
+    expect(callbacks).toBe(1)
+  })
+
+  it('Does not broadcast when selected value is equivalent by equalityFn', () => {
+    const booksState = parentState.getDerivedState(person => person.books, shallowEqual)
+    let callbacks = 0
+    booksState.subscribe(() => { callbacks++ })
+    expect(callbacks).toBe(1)
+    parentState.set(state => ({ ...state, books: [...state.books] }))
+    expect(callbacks).toBe(1)
+  })
 })
+
+// use hook
+// --------
 
 describe('VState use hook', () => {
   const numberState = new VState(0)
@@ -100,7 +148,76 @@ describe('VState use hook', () => {
   })
 })
 
-// Integration tests of VState
+// inject HOC
+// ---------
+
+describe('VState inject HOC', () => {
+  const counter = new VState(0)
+  const objState = new VState({ count: 0 })
+  let renderCount = 0
+  const getRenderedCount = () => screen.getByText(/Count/i)
+  const getRenderedObjectCount = () => screen.getByText(/Object/i)
+  const Component = props => {
+    return (
+      <div>
+        <div>Count: {props.count}</div>
+        <div>Object: {props.count}</div>
+      </div>
+    )
+  }
+  afterEach(() => {
+    objState.reset()
+    counter.reset()
+    renderCount = 0
+  })
+  it('Renders current value on mount', () => {
+    const ConnectedComponent = counter.inject('count', Component)
+    render(<ConnectedComponent />)
+    expect(getRenderedCount()).toHaveTextContent('Count: 0')
+  })
+
+  it('Renders new value when state updated', () => {
+    const ConnectedComponent = counter.inject('count', Component)
+    render(<ConnectedComponent />)
+    counter.increment()
+    expect(getRenderedCount()).toHaveTextContent('Count: 1')
+  })
+
+  it('Renders current selected value on mount', () => {
+    const ConnectedComponent = objState.inject(s => s, Component)
+    render(<ConnectedComponent />)
+    expect(getRenderedObjectCount()).toHaveTextContent('Object: 0')
+  })
+
+  it('Renders new selected value when state updated', () => {
+    const ConnectedComponent = objState.inject(s => s, Component)
+    render(<ConnectedComponent />)
+    objState.set({ count: 20 })
+    expect(getRenderedObjectCount()).toHaveTextContent('Object: 20')
+  })
+
+  it('Does not re-render when state change has no effect selected value', () => {
+    const ConnectedComponent = objState.inject(s => ({ count: s.count }), Component, shallowEqual)
+    render(<ConnectedComponent />)
+    const renderCountBeforeSet = renderCount
+    objState.set(state => ({ ...state, otherKey: 'other value' }))
+    expect(renderCount - renderCountBeforeSet).toBe(0)
+  })
+
+  it('Renders current selected value on mount with equalityFn', () => {
+    const ConnectedComponent = objState.inject(s => s, Component, shallowEqual)
+    render(<ConnectedComponent />)
+    expect(getRenderedObjectCount()).toHaveTextContent('Object: 0')
+  })
+
+  it('Renders new selected value when shallowEqual used as equality function if selector returns object with different structure', () => {
+    const ConnectedComponent = objState.inject(s => s, Component, shallowEqual)
+    render(<ConnectedComponent />)
+    objState.set(state => ({ ...state, otherKey: 'other value' }))
+    expect(getRenderedObjectCount()).toHaveTextContent('Object: 0')
+  })
+})
+
 describe('Interact with VState', () => {
   test(
     'Init undefined, get undefined',
@@ -324,21 +441,6 @@ describe('Interact with VState', () => {
       testState.unsubscribe('testid')
       testState.set('test me')
       expect(initialVal).toBe(100)
-    }
-  )
-
-  test(
-    'Inject HOC',
-    () => {
-      const counter = new VState(0)
-      const Component = ({ count }) => <div>Count: {count}</div>
-      const ConnectedComponent = counter.inject('count', Component)
-      render(<ConnectedComponent />)
-      const countText = screen.getByText(/count/i)
-      expect(countText).toHaveTextContent('Count: 0')
-      counter.increment()
-      const counterText2 = screen.getByText(/count/i)
-      expect(counterText2).toHaveTextContent('Count: 1')
     }
   )
 })

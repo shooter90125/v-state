@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">62.5% </span>
+                <span class="strong">84.38% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>20/32</span>
+                <span class='fraction'>27/32</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">54.17% </span>
+                <span class="strong">79.17% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>13/24</span>
+                <span class='fraction'>19/24</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">75% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>3/4</span>
+                <span class='fraction'>4/4</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">80% </span>
+                <span class="strong">95% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>16/20</span>
+                <span class='fraction'>19/20</span>
             </div>
         
             
@@ -55,7 +55,7 @@
             Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
         </p>
     </div>
-    <div class='status-line medium'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -87,39 +87,39 @@
 <a name='L28'></a><a href='#L28'>28</a>
 <a name='L29'></a><a href='#L29'>29</a>
 <a name='L30'></a><a href='#L30'>30</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">19x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">10x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">const shallowEqual = (thing1, thing2) =&gt; {
   if (thing1 === thing2) return true
   <span class="missing-if-branch" title="if path not taken" >I</span>if (!thing1) <span class="cstat-no" title="statement not covered" >return false</span>
-  <span class="missing-if-branch" title="if path not taken" >I</span>if (!thing2) <span class="cstat-no" title="statement not covered" >return false</span>
-  <span class="missing-if-branch" title="if path not taken" >I</span>if (Array.isArray(thing1) &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >Array.isArray(thing2))</span> <span class="cstat-no" title="statement not covered" >return _shallowEqualArray(thing1, thing2)</span>
+  if (!thing2) return false
+  if (Array.isArray(thing1) &amp;&amp; Array.isArray(thing2)) return _shallowEqualArray(thing1, thing2)
   <span class="missing-if-branch" title="else path not taken" >E</span>if (_isObject(thing1) &amp;&amp; _isObject(thing2)) return _shallowEqualObject(thing1, thing2)
 <span class="cstat-no" title="statement not covered" >  return false</span>
 }
@@ -127,7 +127,7 @@
 const _shallowEqualObject = (object1, object2) =&gt; {
   const object1Keys = Object.keys(object1)
   const object2Keys = Object.keys(object2)
-  <span class="missing-if-branch" title="if path not taken" >I</span>if (object1Keys.length !== object2Keys.length) <span class="cstat-no" title="statement not covered" >return false</span>
+  if (object1Keys.length !== object2Keys.length) return false
   for (const key in object1) {
     <span class="missing-if-branch" title="if path not taken" >I</span>if (!Object.prototype.hasOwnProperty.call(object2, key)) <span class="cstat-no" title="statement not covered" >return false</span>
     if (object1[key] !== object2[key]) return false
@@ -135,10 +135,10 @@ const _shallowEqualObject = (object1, object2) =&gt; {
   return true
 }
 &nbsp;
-const _shallowEqualArray = <span class="fstat-no" title="function not covered" >(a</span>rray1, array2) =&gt; {
-<span class="cstat-no" title="statement not covered" >  if (array1.length !== array2.length) <span class="cstat-no" title="statement not covered" >return false</span></span>
-<span class="cstat-no" title="statement not covered" >  for (const index in array1) <span class="cstat-no" title="statement not covered" >if (array1[index] !== array2[index]) <span class="cstat-no" title="statement not covered" >return false</span></span></span>
-<span class="cstat-no" title="statement not covered" >  return true</span>
+const _shallowEqualArray = (array1, array2) =&gt; {
+  <span class="missing-if-branch" title="if path not taken" >I</span>if (array1.length !== array2.length) <span class="cstat-no" title="statement not covered" >return false</span>
+  for (const index in array1) <span class="missing-if-branch" title="if path not taken" >I</span>if (array1[index] !== array2[index]) <span class="cstat-no" title="statement not covered" >return false</span>
+  return true
 }
 &nbsp;
 const _isObject = variable =&gt; Object.prototype.toString.call(variable) === '[object Object]'
@@ -151,7 +151,7 @@ export default shallowEqual
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank">istanbul</a>
-                at Mon May 25 2020 03:00:45 GMT+0100 (British Summer Time)
+                at Mon May 25 2020 16:56:16 GMT+0100 (British Summer Time)
             </div>
         </div>
         <script src="prettify.js"></script>
