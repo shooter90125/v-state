@@ -50,7 +50,7 @@ class VState {
     }
   }
 
-  getDerivedState (selector = this._defaultSelector, equalityFn = this._equalityFn) {
+  getDerivedState (selector = this._defaultSelector, equalityFn = this._defaultEqualityFn) {
     const derivedState = new VState()
     this.subscribe((value, unsubscribe) => {
       if (!derivedState) unsubscribe()

@@ -1,5 +1,6 @@
 import React from 'react'
 import VState from './v-state'
+import shallowEqual from './shallow-equal'
 import sleep from 'sleep-promise'
 import { render, screen, fireEvent } from '@testing-library/react'
 import '@testing-library/jest-dom/extend-expect'
@@ -9,6 +10,94 @@ import { renderHook, act } from '@testing-library/react-hooks'
 test('Create instance of VState', () => {
   const testState = new VState()
   expect(testState).toBeInstanceOf(VState)
+})
+
+describe('VState getDerivedState', () => {
+  const parentState = new VState({ name: 'Aaron', age: 32, books: ['Harry Potter', 'The Hobbit'] })
+  it('Creates derived state', () => {
+    const booksState = parentState.getDerivedState(person => person.books)
+    expect(booksState).toBeInstanceOf(VState)
+  })
+})
+
+describe('VState use hook', () => {
+  const numberState = new VState(0)
+  const objectState = new VState({ key: 'value' })
+  const objectShallowState = new VState({ a: 'b', c: 'd', e: 'f' })
+
+  let renderCount = 0
+
+  const Component = () => {
+    renderCount++
+    const number = numberState.use()
+    const objectValue = objectState.use(({ key }) => key)
+    const objectShallow = objectShallowState.use(({ a, c }) => ({ a, c }), shallowEqual)
+    return (
+      <div>
+        <div>numberState: {number}</div>
+        <div>objectValue: {objectValue}</div>
+        <div>cVal: {objectShallow.c}</div>
+      </div>
+    )
+  }
+
+  let unmountComponent
+
+  beforeEach(() => {
+    const { unmount } = render(<Component />)
+    unmountComponent = unmount
+  })
+
+  afterEach(() => {
+    unmountComponent()
+    numberState.reset()
+    objectState.reset()
+    objectShallowState.reset()
+    renderCount = 0
+  })
+
+  const getRenderedNumber = () => screen.getByText(/numberState/i)
+  const getRenderedObjectValue = () => screen.getByText(/objectValue/i)
+  const getRenderedObjectShallowValue = () => screen.getByText(/cVal/i)
+
+  it('Renders current value on mount', () => {
+    expect(getRenderedNumber()).toHaveTextContent('numberState: 0')
+  })
+
+  it('Renders new value when state updated', () => {
+    numberState.increment()
+    expect(getRenderedNumber()).toHaveTextContent('numberState: 1')
+  })
+
+  it('Renders current selected value on mount', () => {
+    expect(getRenderedObjectValue()).toHaveTextContent('objectValue: value')
+  })
+
+  it('Renders new selected value when state updated', () => {
+    objectState.set({ key: 'different value' })
+    expect(getRenderedObjectValue()).toHaveTextContent('objectValue: different value')
+  })
+
+  it('Does not re-render when state change has no effect selected value', () => {
+    const renderCountBeforeSet = renderCount
+    objectState.set(state => ({ ...state, otherKey: 'other value' }))
+    expect(renderCount - renderCountBeforeSet).toBe(0)
+  })
+
+  it('Renders current selected value on mount with equalityFn', () => {
+    expect(getRenderedObjectShallowValue()).toHaveTextContent('cVal: d')
+  })
+
+  it('Does not re-render when shallowEqual used as equality function if selector returns object with same structure', () => {
+    const renderCountBeforeSet = renderCount
+    objectShallowState.set(state => ({ ...state, e: 'g' }))
+    expect(renderCount - renderCountBeforeSet).toBe(0)
+  })
+
+  it('Renders new selected value when shallowEqual used as equality function if selector returns object with different structure', () => {
+    objectShallowState.set(state => ({ ...state, c: 'z' }))
+    expect(getRenderedObjectShallowValue()).toHaveTextContent('cVal: z')
+  })
 })
 
 // Integration tests of VState
@@ -235,44 +324,6 @@ describe('Interact with VState', () => {
       testState.unsubscribe('testid')
       testState.set('test me')
       expect(initialVal).toBe(100)
-    }
-  )
-
-  test(
-    'use hook',
-    () => {
-      const counter = new VState(0)
-      const person = new VState({ name: 'Tom', age: 30 })
-
-      let renderCount = 0
-      const Component = () => {
-        renderCount += 1
-        const count = counter.use()
-        const age = person.use(person => person.age)
-        return (
-          <div>
-            <div>Count: {count}</div>
-            <div>Age: {age}</div>
-          </div>
-        )
-      }
-      render(<Component />)
-
-      // Increment count and expect component to reflect new value
-      expect(screen.getByText(/count/i)).toHaveTextContent('Count: 0')
-      counter.increment()
-      expect(screen.getByText(/count/i)).toHaveTextContent('Count: 1')
-
-      // Change age and expect content to change and 1 extra render
-      const renderCountBeforeSet = renderCount
-      person.set(person => ({ ...person, age: 90 }))
-      expect(renderCount - renderCountBeforeSet).toBe(1)
-      expect(screen.getByText(/age/i)).toHaveTextContent('Age: 90')
-
-      // Change name and expect no extra renders
-      const renderCountBeforeDummy = renderCount
-      person.set(person => ({ ...person, name: 'John' }))
-      expect(renderCount - renderCountBeforeDummy).toBe(0)
     }
   )
 
