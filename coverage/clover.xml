@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1590422176436" clover="3.2.0">
-  <project timestamp="1590422176436" name="All files">
+<coverage generated="1590425730089" clover="3.2.0">
+  <project timestamp="1590425730089" name="All files">
     <metrics statements="107" coveredstatements="105" conditionals="51" coveredconditionals="43" methods="40" coveredmethods="37" elements="198" coveredelements="185" complexity="0" loc="107" ncloc="107" packages="1" files="2" classes="2"/>
     <file name="shallow-equal.js" path="/Users/scott/Documents/Projects/v-state/src/shallow-equal.js">
       <metrics statements="20" coveredstatements="19" conditionals="24" coveredconditionals="19" methods="4" coveredmethods="4"/>
