@@ -107,6 +107,16 @@ const flushUnsubscribeRequests = object => {
   setUnsubscribeRequests(object, [])
 }
 
+// Subscribe and call
+
+const subscribeAndCall = (object, fn, id = generateId()) => {
+  const subscriptions = getSubscriptions(object)
+  subscriptions.push({ id, fn })
+  const currentValue = getValue(object)
+  fn(currentValue, () => getUnsubscribeRequests(object).push(id))
+  return () => getUnsubscribeRequests(object).push(id)
+}
+
 // Methods
 
 function unsubscribe (...ids) {
@@ -146,19 +156,13 @@ function reset () {
   setAndBroadcast(this, initialValue)
 }
 
-function subscribe (fn, id = generateId()) {
-  const subscriptions = getSubscriptions(this)
-  subscriptions.push({ id, fn })
-  const currentValue = getValue(this)
-  fn(currentValue, () => getUnsubscribeRequests(this).push(id))
-  return () => getUnsubscribeRequests(this).push(id)
+function subscribe (fn, id) {
+  return subscribeAndCall(this, fn, id)
 }
-
-// Advanced methods
 
 function getDerivedState (selector = simpleSelector, equalityFn = strictEqual) {
   const derivedState = new VState(undefined, undefined, 'readOnly')
-  subscribe.call(this, (value, unsubscribe) => {
+  subscribeAndCall(this, (value, unsubscribe) => {
     if (!derivedState) unsubscribe()
     const currentSelectedValue = getValue(derivedState)
     const selectedValue = selector(value)
@@ -181,7 +185,7 @@ function use (selector = simpleSelector, equalityFn = strictEqual) {
     let selectorAtLastSet = selector
     let selectedValueAtLastSet = selectedValue
 
-    return subscribe.call(this, newValue => {
+    return subscribeAndCall(this, newValue => {
       if (unmounted()) return
       const newSelector = selectorRef.current
       const newEqualityFn = equalityFnRef.current
@@ -204,7 +208,7 @@ function use (selector = simpleSelector, equalityFn = strictEqual) {
 }
 
 function join (...vStates) {
-  const subscribes = vStates.map(vState => fn => subscribe.call(vState, fn))
+  const subscribes = vStates.map(vState => fn => subscribeAndCall(vState, fn))
   const jointState = new VState(undefined, undefined, 'readOnly')
   subscribes.forEach(subscribe => {
     subscribe(() => {
@@ -215,6 +219,8 @@ function join (...vStates) {
   })
   return jointState
 }
+
+// HOC (depends on use method)
 
 function inject (selector, Component, equalityFn = strictEqual) {
   return props => {
