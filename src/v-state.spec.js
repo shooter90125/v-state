@@ -6,13 +6,24 @@ import shallowEqual from './shallow-equal'
 import { render, screen } from '@testing-library/react'
 import '@testing-library/jest-dom/extend-expect'
 
-test('Create instance of VState', () => {
-  const testState = new VState()
-  expect(testState).toBeInstanceOf(VState)
-})
-
 // getDerivedState
 // ---------------
+
+describe('VState join', () => {
+  const state1 = new VState(1)
+  const state2 = new VState(2)
+
+  it('Creates a joint state with the right values', () => {
+    const jointState = VState.join(state1, state2)
+    expect(jointState.get()).toEqual([1, 2])
+  })
+
+  it('Updates joint state', () => {
+    const jointState = VState.join(state1, state2)
+    state1.set(7)
+    expect(jointState.get()).toEqual([7, 2])
+  })
+})
 
 describe('VState getDerivedState', () => {
   const parentState = new VState(
@@ -21,11 +32,6 @@ describe('VState getDerivedState', () => {
   )
 
   beforeEach(parentState.reset)
-
-  it('Creates derived state', () => {
-    const booksState = parentState.getDerivedState(person => person.books)
-    expect(booksState).toBeInstanceOf(VState)
-  })
 
   it('Does not allow setting on derived state', () => {
     const booksState = parentState.getDerivedState(person => person.age)
@@ -242,6 +248,26 @@ describe('Interact with VState', () => {
       const fn = testState.get()
       const testValue = fn(1, 7)
       expect(testValue).toEqual(8)
+    }
+  )
+
+  it('Walks back through history upon undo and redo',
+    () => {
+      const testState = new VState(10)
+      testState.set(20)
+      testState.set(30)
+      testState.set(40)
+      testState.undo()
+      expect(testState.get()).toBe(30)
+      testState.undo()
+      expect(testState.get()).toBe(20)
+      expect(testState.redo()).toBe(true)
+      expect(testState.get()).toBe(30)
+      testState.set(100)
+      expect(testState.redo()).toBe(false)
+      expect(testState.get()).toBe(100)
+      testState.undo()
+      expect(testState.get()).toBe(30)
     }
   )
 
