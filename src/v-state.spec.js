@@ -372,36 +372,6 @@ describe('Interact with VState', () => {
   )
 
   test(
-    "Can't mutate initial state",
-    () => {
-      const testState = new VState({ test: 'value' })
-      const value = testState.get()
-      expect(() => { value.test = 'differentValue' }).toThrow()
-    }
-  )
-
-  test(
-    "Can't mutate after setting state",
-    () => {
-      const testState = new VState({ test: 'value' })
-      testState.set({ test: 'value2' })
-      const value = testState.get()
-      expect(() => { value.test = 'differentValue' }).toThrow()
-    }
-  )
-
-  test(
-    "Can't mutate after resetting state",
-    () => {
-      const testState = new VState({ test: 'value' })
-      testState.set({ test: 'value2' })
-      testState.reset()
-      const value = testState.get()
-      expect(() => { value.test = 'differentValue' }).toThrow()
-    }
-  )
-
-  test(
     'Subscription',
     () => {
       const testState = new VState(110)
