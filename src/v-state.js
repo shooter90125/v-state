@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useLayoutEffect, useRef } from 'react'
+import React, { useState, useMemo, useEffect, useLayoutEffect, useRef, useCallback } from 'react'
 import { v1 as generateId } from 'uuid'
 
 const useLayoutEffectNoWarning = typeof window !== 'undefined' ? useLayoutEffect : useEffect
@@ -7,6 +7,16 @@ const useUpdatingRef = value => {
   const ref = useRef()
   ref.current = value
   return ref
+}
+
+const useUnmounted = () => {
+  const unmounted = useRef(false)
+
+  useEffect(() => {
+    return () => { unmounted.current = true }
+  }, [])
+
+  return useCallback(() => unmounted.current, [])
 }
 
 class VState {
@@ -114,6 +124,7 @@ class VState {
   }
 
   use (selector = this._defaultSelector, equalityFn = this._defaultEqualityFn) {
+    const unmounted = useUnmounted()
     const initialValue = this.get()
     const [value, setValue] = useState(initialValue)
     const selectedValue = useMemo(() => selector(value), [selector, value])
@@ -127,6 +138,7 @@ class VState {
       let selectedValueAtLastSet = selectedValue
 
       return this.subscribe(newValue => {
+        if (unmounted()) return
         const newSelector = selectorRef.current
         const newEqualityFn = equalityFnRef.current
 

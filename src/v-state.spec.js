@@ -3,10 +3,8 @@
 import React from 'react'
 import VState from './v-state'
 import shallowEqual from './shallow-equal'
-import sleep from 'sleep-promise'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import '@testing-library/jest-dom/extend-expect'
-import { renderHook, act } from '@testing-library/react-hooks'
 
 test('Create instance of VState', () => {
   const testState = new VState()

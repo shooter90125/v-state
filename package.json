@@ -2,7 +2,7 @@
   "name": "v-state",
   "version": "0.0.1",
   "description": "Framework agnostic state management library—simple and flexible.",
-  "main": "index.js",
+  "main": "lib/index.js",
   "scripts": {
     "build": "npx webpack",
     "watch": "npx webpack --watch",
@@ -26,15 +26,17 @@
     "jest": "^26.0.1",
     "react-test-renderer": "^16.13.1",
     "webpack": "^4.42.1",
-    "webpack-cli": "^3.3.11"
-  },
-  "dependencies": {
+    "webpack-cli": "^3.3.11",
+    "react-dom": "^16.13.1",
     "@testing-library/jest-dom": "^5.8.0",
     "@testing-library/react": "^10.0.4",
-    "@testing-library/react-hooks": "^3.2.1",
-    "react": "^16.13.1",
-    "react-dom": "^16.13.1",
-    "sleep-promise": "^8.0.1",
+    "@babel/cli": "^7.8.4",
+    "react": "^16.13.1"
+  },
+  "dependencies": {
     "uuid": "^8.1.0"
+  },
+  "peerDependencies": {
+    "react": "^16.13.1"
   }
 }
