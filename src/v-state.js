@@ -90,7 +90,7 @@ function join (...vStates) {
   return newPublicInterface
 }
 
-const createState = (initialValue, reducer) => {
+function createState (initialValue, reducer) {
   const privateState = createPrivateState(initialValue)
   const publicInterface = createPublicInterface(privateState, reducer)
   return publicInterface
