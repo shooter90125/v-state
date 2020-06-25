@@ -1,66 +1,78 @@
-
 import { v1 as generateId } from 'uuid'
+import { isFunction } from './utils'
 
-const createPrivateState = (initialValue = undefined, readOnly, maxHistory = 10) => {
-  let subscriptions = []
-  let unsubscribeRequests = []
-  let history = [initialValue]
-  let index = 0
-  return {
-    addToUnsubscribeRequests: (...ids) => {
-      unsubscribeRequests.push(...ids)
-    },
-    broadcast: function () {
-      const currentValue = this.get()
-      subscriptions.forEach(({ id, fn }) => fn(currentValue, () => unsubscribeRequests.push(id))) 
-    },
-    canRedo: () => index < history.length - 1,
-    canUndo: () => index > 0,
-    flushUnsubscribeRequests: () => {
-      const newSubscriptions = subscriptions.filter(({ id }) => !unsubscribeRequests.includes(id))
-      subscriptions = newSubscriptions
-      unsubscribeRequests = []
-    },
-    forceSet: function (_newValue) {
-      const currentValue = this.get()
-      const newValue = isFunction(_newValue) ? _newValue(currentValue) : _newValue
-      if (newValue !== currentValue) {
-        if (this.canRedo()) history = history.slice(0, index + 1)
-        history.push(newValue)
-        if (history.length > maxHistory) history = history.slice(1)
-        else index++
-        this.flushUnsubscribeRequests()
-        this.broadcast()
-      }
-    },
-    get: () => history[index],
-    getInitialValue: () => initialValue,
-    redo: function () {
-      if (readOnly) throw new Error('Cannot set value on a read-only state.')
-      if (this.canRedo()) {
-        index++
-        return true
-      } else return false
-    },
-    set: function (value) {
-      if (readOnly) throw new Error('Cannot set value on a read-only state.')
-      this.forceSet(value)
-    },
-    subscribe: function (fn, id = generateId()) {
-      subscriptions.push({ id, fn })
-      fn(this.get(), () => unsubscribeRequests.push(id))
-      return () => unsubscribeRequests.push(id)
-    },
-    undo: function () {
-      if (readOnly) throw new Error('Cannot set value on a read-only state.')
-      if (this.canUndo()) {
-        index--
-        return true
-      } else return false
+class PrivateState {
+  constructor (initialValue = undefined, maxHistory = 10) {
+    this.history = [initialValue]
+    this.index = 0
+    this.initialValue = initialValue
+    this.maxHistory = maxHistory
+    this.readOnly = false
+    this.subscriptions = []
+    this.unsubscribeRequests = []
+  }
+  addToUnsubscribeRequests (...ids) {
+    this.unsubscribeRequests.push(...ids)
+  }
+  broadcast () {
+    const currentValue = this.get()
+    this.subscriptions.forEach(({ id, fn }) => fn(currentValue, () => this.unsubscribeRequests.push(id))) 
+  }
+  canRedo () {
+    return this.index < this.history.length - 1
+  }
+  canUndo () {
+    return this.index > 0
+  }
+  flushUnsubscribeRequests () {
+    const newSubscriptions = this.subscriptions.filter(({ id }) => !this.unsubscribeRequests.includes(id))
+    this.subscriptions = newSubscriptions
+    this.unsubscribeRequests = []
+  }
+  forceSet (_newValue) {
+    const currentValue = this.get()
+    const newValue = isFunction(_newValue) ? _newValue(currentValue) : _newValue
+    if (newValue !== currentValue) {
+      if (this.canRedo()) this.history = this.history.slice(0, this.index + 1)
+      this.history.push(newValue)
+      if (this.history.length > this.maxHistory) this.history = this.history.slice(1)
+      else this.index++
+      this.flushUnsubscribeRequests()
+      this.broadcast()
     }
+  }
+  get () {
+    return this.history[this.index]
+  }
+  getInitialValue () {
+    return this.initialValue
+  }
+  redo () {
+    if (this.readOnly) throw new Error('Cannot set value on a read-only state.')
+    if (this.canRedo()) {
+      this.index++
+      return true
+    } else return false
+  }
+  set (value) {
+    if (this.readOnly) throw new Error('Cannot set value on a read-only state.')
+    this.forceSet(value)
+  }
+  setReadOnly (readOnly) {
+    this.readOnly = readOnly
+  }
+  subscribe (fn, id = generateId()) {
+    this.subscriptions.push({ id, fn })
+    fn(this.get(), () => this.unsubscribeRequests.push(id))
+    return () => this.unsubscribeRequests.push(id)
+  }
+  undo () {
+    if (this.readOnly) throw new Error('Cannot set value on a read-only state.')
+    if (this.canUndo()) {
+      this.index--
+      return true
+    } else return false
   }
 }
 
-const isFunction = value => typeof value === 'function'
-
-export default createPrivateState
+export default PrivateState

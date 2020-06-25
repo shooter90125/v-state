@@ -2,7 +2,7 @@
 
 import React from 'react'
 import VState from './v-state'
-import shallowEqual from './shallow-equal'
+import shallowEqual from './utils/shallow-equal'
 import { render, screen } from '@testing-library/react'
 import '@testing-library/jest-dom/extend-expect'
 
@@ -31,7 +31,7 @@ describe('VState getDerivedState', () => {
     (state, property, value) => ({ ...state, [property]: value })
   )
 
-  beforeEach(parentState.reset)
+  beforeEach(() => parentState.reset())
 
   it('Does not allow setting on derived state', () => {
     const booksState = parentState.getDerivedState(person => person.age)
