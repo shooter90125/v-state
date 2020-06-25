@@ -1,39 +1,39 @@
 import React from 'react'
 import PrivateState from './private-state'
-import { usePrivateState, isFunction, shallowEqual, simpleReducer, strictEqual, simpleSelector } from './utils'
-
-const privateStates = new WeakMap()
-const reducers = new WeakMap()
-const readOnly = new WeakMap()
+import { hidden, usePrivateState, isFunction, shallowEqual, strictEqual, simpleSelector } from './utils'
 
 class VState {
-  constructor (initialValue, reducer = simpleReducer) {
-    const privateState = new PrivateState(initialValue)
-    privateStates.set(this, privateState)
-    reducers.set(this, reducer)
+  constructor (initialValue, reducer = undefined) {
+    hidden(this).privateState = new PrivateState(initialValue)
+    hidden(this).reducer = reducer
   }
   canRedo () {
-    if (readOnly.get(this)) return false
-    return privateStates.get(this).canRedo()
+    const { readOnly, privateState } = hidden(this)
+    if (readOnly) return false
+    return privateState.canRedo()
   }
   canUndo () {
-    if (readOnly.get(this)) return false
-    return privateStates.get(this).canUndo()
+    const { readOnly, privateState } = hidden(this)
+    if (readOnly) return false
+    return privateState.canUndo()
   }
   dispatch (...action) {
-    if (readOnly.get(this)) throw new Error('Cannot set value on a read-only state.')
-    const currentValue = privateStates.get(this).get()
-    const newValue = reducers.get(this)(currentValue, ...action)
-    privateStates.get(this).set(newValue)
+    const { readOnly, privateState, reducer } = hidden(this)
+    if (readOnly) throw new Error('Cannot set value on a read-only state.')
+    if (!reducer) throw new Error('Cannot call dispatch on state without a reducer')
+    const currentValue = privateState.get()
+    const newValue = reducer(currentValue, ...action)
+    privateState.set(newValue)
   }
   get () {
-    return privateStates.get(this).get()
+    const { privateState } = hidden(this)
+    return privateState.get()
   }
   getDerivedState (selector = simpleSelector, equalityFn = strictEqual) {
     const newPublicInterface = new this.constructor()
-    const newPrivateState = privateStates.get(newPublicInterface)
-    readOnly.set(newPublicInterface, true)
-    privateStates.get(this).subscribe((value, unsubscribe) => {
+    const newPrivateState = hidden(newPublicInterface).privateState
+    hidden(newPublicInterface).readOnly = true
+    hidden(this).privateState.subscribe((value, unsubscribe) => {
       if (!newPublicInterface) unsubscribe()
       const currentSelectedValue = newPrivateState.get()
       const selectedValue = selector(value)
@@ -42,51 +42,64 @@ class VState {
     return newPublicInterface
   }
   increment (amount = 1) {
-    if (readOnly.get(this)) throw new Error('Cannot set value on a read-only state.')
-    privateStates.get(this).set(value => value + amount)
+    const { readOnly, privateState } = hidden(this)
+    if (readOnly) throw new Error('Cannot set value on a read-only state.')
+    privateState.set(value => value + amount)
   }
   inject (selector, Component, equalityFn = strictEqual) {
+    const { privateState } = hidden(this)
     return props => {
-      const selected = usePrivateState(privateStates.get(this), isFunction(selector) ? selector : undefined, equalityFn)
+      const selected = usePrivateState(privateState, isFunction(selector) ? selector : undefined, equalityFn)
       const newProps = isFunction(selector) ? selected : { [selector]: selected }
       const combinedProps = { ...props, ...newProps }
       return <Component {...combinedProps} />
     }
   }
   redo () {
-    if (readOnly.get(this)) throw new Error('Cannot set value on a read-only state.')
-    return privateStates.get(this).redo()
+    const { readOnly, privateState } = hidden(this)
+    if (readOnly) throw new Error('Cannot set value on a read-only state.')
+    return privateState.redo()
   }
   reset () {
-    if (readOnly.get(this)) throw new Error('Cannot set value on a read-only state.')
-    privateStates.get(this).set(privateStates.get(this).getInitialValue())
+    const { readOnly, privateState } = hidden(this)
+    if (readOnly) throw new Error('Cannot set value on a read-only state.')
+    privateState.set(privateState.getInitialValue())
   }
   set (value) {
-    if (readOnly.get(this)) throw new Error('Cannot set value on a read-only state.')
-    privateStates.get(this).set(value)
+    const { readOnly, privateState } = hidden(this)
+    if (readOnly) throw new Error('Cannot set value on a read-only state.')
+    privateState.set(value)
+  }
+  set reducer (reducer) { // NOT YET TESTED
+    hidden(this).reducer = reducer
   }
   subscribe (fn, id = undefined) {
-    return privateStates.get(this).subscribe(fn, id)
+    const { privateState } = hidden(this)
+    return privateState.subscribe(fn, id)
   }
   toggle () {
-    if (readOnly.get(this)) throw new Error('Cannot set value on a read-only state.')
-    privateStates.get(this).set(currentValue => !currentValue)
+    const { readOnly, privateState } = hidden(this)
+    if (readOnly) throw new Error('Cannot set value on a read-only state.')
+    privateState.set(currentValue => !currentValue)
   }
   undo () {
-    if (readOnly.get(this)) throw new Error('Cannot set value on a read-only state.')
-    return privateStates.get(this).undo()
+    const { readOnly, privateState } = hidden(this)
+    if (readOnly) throw new Error('Cannot set value on a read-only state.')
+    return privateState.undo()
   }
   unsubscribe (...ids) {
-    privateStates.get(this).addToUnsubscribeRequests(...ids)
+    const { privateState } = hidden(this)
+    privateState.addToUnsubscribeRequests(...ids)
   }
   use (selector = simpleSelector, equalityFn = strictEqual) {
-    return usePrivateState(privateStates.get(this), selector, equalityFn)
+    const { privateState } = hidden(this)
+    return usePrivateState(privateState, selector, equalityFn)
   }
   static join (...vStates) {
     const subscribes = vStates.map(vState => fn => vState.subscribe(fn))
     const newPublicInterface = new this()
-    const newPrivateState = privateStates.get(newPublicInterface)
-    readOnly.set(newPublicInterface, true)
+    const newPrivateState = hidden(newPublicInterface).privateState
+    hidden(newPublicInterface).readOnly = true
     subscribes.forEach(subscribe => {
       subscribe(() => {
         const currentValues = newPrivateState.get()
