@@ -7,7 +7,6 @@ class PrivateState {
     this.index = 0
     this.initialValue = initialValue
     this.maxHistory = maxHistory
-    this.readOnly = false
     this.subscriptions = []
     this.unsubscribeRequests = []
   }
@@ -29,7 +28,7 @@ class PrivateState {
     this.subscriptions = newSubscriptions
     this.unsubscribeRequests = []
   }
-  forceSet (_newValue) {
+  set (_newValue) {
     const currentValue = this.get()
     const newValue = isFunction(_newValue) ? _newValue(currentValue) : _newValue
     if (newValue !== currentValue) {
@@ -48,18 +47,10 @@ class PrivateState {
     return this.initialValue
   }
   redo () {
-    if (this.readOnly) throw new Error('Cannot set value on a read-only state.')
     if (this.canRedo()) {
       this.index++
       return true
     } else return false
-  }
-  set (value) {
-    if (this.readOnly) throw new Error('Cannot set value on a read-only state.')
-    this.forceSet(value)
-  }
-  setReadOnly (readOnly) {
-    this.readOnly = readOnly
   }
   subscribe (fn, id = generateId()) {
     this.subscriptions.push({ id, fn })
@@ -67,7 +58,6 @@ class PrivateState {
     return () => this.unsubscribeRequests.push(id)
   }
   undo () {
-    if (this.readOnly) throw new Error('Cannot set value on a read-only state.')
     if (this.canUndo()) {
       this.index--
       return true
