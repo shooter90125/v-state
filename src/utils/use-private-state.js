@@ -9,7 +9,7 @@ const usePrivateState = (privateState, selector = simpleSelector, equalityFn = s
   const unmounted = useUnmounted()
   const initialValue = privateState.get()
   const [value, setValue] = useState(initialValue)
-  const selectedValue = useMemo(() => selector(value), [selector, value])
+  const selectedValue = useMemo(() => selector(initialValue), [selector, value])
   const selectorRef = useUpdatingRef(selector)
   const equalityFnRef = useUpdatingRef(equalityFn)
   useLayoutEffectNoWarning(() => {
